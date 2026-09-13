@@ -62,9 +62,9 @@ O APK sai em `app/build/outputs/apk/debug/app-debug.apk`. Para instalar:
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-A build de release usa a chave de depuração (`isMinifyEnabled = false`), ou
-seja, sai instalável sem nenhuma configuração extra. Para publicar de verdade,
-trocar por uma chave própria em `app/build.gradle.kts`.
+Sem `key.properties` na raiz, a build de release sai assinada com a chave de
+depuração — instalável, sem configuração nenhuma. Com o arquivo lá, sai assinada
+com a chave de release. Ver a seção "Assinatura" abaixo.
 
 Versões usadas: Gradle 9.3.1, AGP 9.1.0, Kotlin embutido do AGP
 (`android.builtInKotlin=true`, sem aplicar o plugin Kotlin), `compileSdk` 36,
@@ -171,3 +171,60 @@ Ir de 1024 para 48 num passo só borra os traços finos do escudo.
 O ícone adaptativo não declara camada `monochrome`: o ícone temático do Android
 13 usa só o canal alfa, e como o miolo do escudo é opaco a silhueta viraria um
 borrão sólido. Sem a camada, o sistema usa o ícone normal.
+
+## Assinatura
+
+A chave de release do SiKey é uma RSA de 2048 bits, válida até 29/01/2054, com
+este certificado:
+
+```
+CN=Caio Cunha, OU=SiKey, O=SiKey, L=Aparecida de Goiania, ST=Goias, C=BR
+SHA-256: 6F:FA:31:61:6B:EC:74:8C:8F:86:D4:7A:DF:1D:FE:0F:
+         F7:C6:6A:09:CA:62:5D:79:C9:63:60:72:4F:07:43:7D
+```
+
+Essa impressão digital é **pública**: ela vai dentro de todo APK assinado por
+essa chave, e é justamente o número que o próprio SiKey mostra. Serve para
+qualquer pessoa conferir se um APK do SiKey veio mesmo daqui.
+
+Nem a chave nem as senhas estão no repositório:
+
+| O quê | Onde | No git? |
+|---|---|---|
+| Chave privada (`sikey-release.jks`) | fora do repositório, em `chaves-android/` | nunca |
+| Senhas e caminho (`key.properties`) | raiz do projeto | no `.gitignore` |
+
+A chave ficou **fora** da pasta do projeto de propósito. O repositório é
+público, e um `.jks` dentro dele depende de o `.gitignore` estar certo para
+sempre; fora dele, nem um `git add -f` distraído alcança.
+
+### Faça backup dos dois arquivos
+
+Perder o `.jks` ou a senha significa **nunca mais** conseguir publicar uma
+atualização do SiKey. Não existe recuperação: a chave privada não está em lugar
+nenhum além desse arquivo. Guarde uma cópia dos dois em outro lugar, hoje.
+
+E trocar de chave depois não resolve: o Android identifica o app pelo par
+`applicationId` + certificado. Um APK assinado com chave diferente é **recusado**
+na atualização, e quem já tinha o app precisa desinstalar antes de instalar o
+novo.
+
+### Refazer (só antes de distribuir)
+
+```bash
+keytool -genkeypair -v \
+  -keystore ~/chaves-android/sikey-release.jks -storetype PKCS12 \
+  -alias sikey -keyalg RSA -keysize 2048 -validity 10000 \
+  -dname "CN=..., OU=SiKey, O=SiKey, L=..., ST=..., C=BR"
+```
+
+Depois é só apontar `key.properties` para o arquivo novo. O `app/build.gradle.kts`
+lê as quatro propriedades (`storeFile`, `storePassword`, `keyAlias`,
+`keyPassword`) e só monta a configuração de assinatura se as quatro existirem e
+o `.jks` estiver no lugar — meia configuração falharia tarde, na hora de
+empacotar, com uma mensagem que não diz o que falta.
+
+O APK sai com os esquemas v2 e v3. O v1 está desligado porque só serve para
+Android 6 ou anterior, e o `minSdk` aqui é 24. O v3 grava a linhagem que permite
+trocar de chave um dia sem quebrar a atualização — sem ele, essa porta fica
+fechada para sempre.

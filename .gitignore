@@ -9,3 +9,8 @@
 .externalNativeBuild/
 .cxx/
 .kotlin/
+
+# Material de chave de assinatura. NUNCA versionar.
+/key.properties
+*.jks
+*.keystore
