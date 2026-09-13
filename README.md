@@ -144,3 +144,30 @@ build passa, debug e release.
    `C:\Android\Sdk`, e apontar o `sdk.dir` do `local.properties` para lá.
 
 Resolvido isso, o bloco `tasks.withType<JavaCompile>` pode ser removido.
+
+## Ícone
+
+A arte original está em `arte/Sikey_icone.png` (1024×1024, fundo transparente),
+com o fonte do GIMP ao lado. Os PNG do lançador não são editados à mão: saem
+dela por `arte/MakeIcons.java`.
+
+```bash
+java arte/MakeIcons.java arte/Sikey_icone.png app/src/main/res
+```
+
+O programa recorta a moldura transparente e gera, para cada densidade, duas
+coisas com regras diferentes:
+
+- `ic_launcher.png` — ícone legado (Android 7 e anteriores), com a arte ocupando
+  92% do quadrado.
+- `ic_launcher_foreground.png` — primeiro plano do ícone adaptativo, com a arte
+  dentro da zona segura de 66dp do canvas de 108dp. Fora dela, a máscara do
+  lançador corta: num aparelho a máscara é círculo, no outro é quadrado
+  arredondado, e o desenho não pode depender de qual.
+
+A redução é feita pela metade de cada vez até chegar perto do tamanho final.
+Ir de 1024 para 48 num passo só borra os traços finos do escudo.
+
+O ícone adaptativo não declara camada `monochrome`: o ícone temático do Android
+13 usa só o canal alfa, e como o miolo do escudo é opaco a silhueta viraria um
+borrão sólido. Sem a camada, o sistema usa o ícone normal.
