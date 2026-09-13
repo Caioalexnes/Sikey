@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SiKey</string>
+
+    <!-- Lista principal -->
+    <string name="search_hint">Buscar por nome ou pacote</string>
+    <string name="show_system_apps">Mostrar apps do sistema</string>
+    <string name="open_apk_file">Verificar arquivo APK…</string>
+    <string name="refresh">Atualizar lista</string>
+    <string name="no_apps">Nenhum app encontrado</string>
+    <plurals name="apps_count">
+        <item quantity="one">%d app</item>
+        <item quantity="other">%d apps</item>
+    </plurals>
+    <string name="error_no_file_picker">Nenhum seletor de arquivos disponível</string>
+
+    <!-- Detalhes -->
+    <string name="copy">Copiar</string>
+    <string name="copied">%1$s copiado</string>
+    <string name="copy_all">Copiar tudo</string>
+    <string name="share">Compartilhar</string>
+    <string name="version_format">Versão %1$s (%2$d)</string>
+
+    <string name="section_signing_cert">Certificado de assinatura</string>
+    <string name="signer_n">Assinante %1$d</string>
+    <string name="cert_current">Certificado atual</string>
+    <string name="cert_previous">Certificado anterior %1$d (chave rotacionada)</string>
+    <string name="no_certificates">Nenhum certificado de assinatura encontrado</string>
+    <string name="cert_subject">Emitido para</string>
+    <string name="cert_issuer">Emitido por</string>
+    <string name="cert_validity">Validade</string>
+    <string name="cert_validity_range">%1$s até %2$s</string>
+    <string name="cert_key">Chave</string>
+    <string name="cert_serial">Número de série</string>
+
+    <string name="section_apk_file">Arquivo APK</string>
+    <string name="file_path">Caminho</string>
+    <string name="file_size">Tamanho</string>
+    <string name="hashing">Calculando os hashes do arquivo…</string>
+    <string name="no_apk_files">Nenhum arquivo APK encontrado</string>
+
+    <string name="compare_title">Comparar com um hash esperado</string>
+    <string name="compare_hint">Cole aqui o SHA-256, SHA-1 ou MD5</string>
+    <string name="compare_match">Confere: %1$s</string>
+    <string name="compare_no_match">Não confere com nenhum hash deste app</string>
+
+    <string name="error_package_not_found">App não encontrado: %1$s</string>
+    <string name="error_read_file">Não foi possível ler o arquivo: %1$s</string>
+    <string name="error_open_stream">Não foi possível abrir o arquivo</string>
+    <string name="warning_not_apk">O arquivo não parece ser um APK válido. Só os hashes do arquivo foram calculados.</string>
+
+    <string name="report_package">Pacote: %1$s</string>
+    <string name="report_footer">Gerado pelo SiKey</string>
+</resources>

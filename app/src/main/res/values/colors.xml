@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fundo do ícone adaptativo. A arte do escudo foi desenhada sobre branco;
+         qualquer cor forte aqui vaza pelas bordas da máscara do lançador. -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+    <color name="hash_match">#1E8E3E</color>
+    <color name="hash_mismatch">#D93025</color>
+</resources>
