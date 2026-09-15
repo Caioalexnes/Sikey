@@ -1,181 +1,190 @@
 # SiKey
 
-App Android que mostra as impressões digitais **SHA-256, SHA-1 e MD5** dos apps
-instalados no aparelho e de qualquer arquivo `.apk`.
+An Android app that shows the **SHA-256, SHA-1 and MD5** fingerprints of the
+apps installed on your device, and of any `.apk` file.
 
-Serve para responder uma pergunta só, mas que aparece o tempo todo: *este app
-aqui é mesmo o que eu acho que é?*
+It answers a single question, one that comes up all the time: *is this app
+really the one I think it is?*
 
-## O app mostra duas coisas diferentes
+## Two different things, both called "the app's hash"
 
-Os dois costumam ser chamados de "hash do app", e confundir um com o outro é o
-erro mais comum ao conferir um APK.
+Mixing them up is the most common mistake when verifying an APK.
 
-| | Certificado de assinatura | Arquivo APK |
+| | Signing certificate | APK file |
 |---|---|---|
-| Responde | **quem** assinou | **qual** arquivo é |
-| Muda quando o app é atualizado? | não | sim, toda versão |
-| Onde esse número aparece | Play Console, Firebase, `assetlinks.json`, `keytool`, `apksigner` | página de download, `sha256sum` |
-| Serve para | saber se o APK veio de quem você espera | conferir um download byte a byte |
+| Answers | **who** signed it | **which** file it is |
+| Changes when the app is updated? | no | yes, every version |
+| Where you see this number | Play Console, Firebase, `assetlinks.json`, `keytool`, `apksigner` | download pages, `sha256sum` |
+| Use it to | check the APK came from who you expect | verify a download byte for byte |
 
-Para decidir se confia num APK baixado fora da loja, o número que importa é o do
-**certificado**: ele é o mesmo em todas as versões publicadas por aquele
-desenvolvedor. O hash do arquivo só prova que o download não veio corrompido ou
-trocado.
+To decide whether to trust an APK downloaded outside a store, the number that
+matters is the **certificate** one: it is the same across every version a
+developer publishes. The file hash only proves the download wasn't corrupted or
+swapped.
 
-## O que tem na tela
+## Features
 
-- Lista dos apps instalados, com busca por nome ou pacote e opção de incluir os
-  apps do sistema.
-- Por app: os três hashes do certificado, os três do `base.apk` (e de cada
-  split, quando existe), além de emissor, validade, algoritmo da chave e número
-  de série.
-- **Caixa de comparação**: cole o valor esperado e o app diz se bate e com o
-  quê. Aceita qualquer formatação — com dois-pontos, com espaços, maiúsculo ou
-  minúsculo.
-- **Verificar arquivo APK**: escolhe um `.apk` pelo seletor de arquivos e faz a
-  mesma análise, sem precisar instalar nada. Também abre por "Abrir com" a
-  partir de um gerenciador de arquivos.
-- Copiar cada hash, copiar tudo de uma vez, compartilhar o relatório.
+- List of installed apps, searchable by name or package, with an option to
+  include system apps.
+- Per app: the three certificate hashes, the three hashes of `base.apk` (and of
+  each split, when present), plus issuer, validity, key algorithm and serial
+  number.
+- **Compare box**: paste the expected value and the app tells you whether it
+  matches, and what it matched. Any formatting works — with colons, with
+  spaces, upper or lower case.
+- **Verify APK file**: pick an `.apk` with the file picker and get the same
+  analysis, without installing anything. SiKey also shows up under "Open with"
+  in file managers.
+- Copy each hash, copy everything at once, share the report.
 
-Hash de certificado é copiado no formato `AA:BB:CC` (o do Play Console e do
-`keytool`); hash de arquivo, em hexadecimal puro minúsculo (o do `sha256sum`).
+Certificate hashes are copied in `AA:BB:CC` form (as in Play Console and
+`keytool`); file hashes as plain lowercase hex (as in `sha256sum`).
 
-## Sobre MD5 e SHA-1
+The interface is available in Portuguese (default) and English.
 
-Estão na tela porque ferramentas antigas ainda imprimem esses valores e às vezes
-é só isso que a outra ponta te dá. Os dois têm colisões práticas há anos e não
-servem para decidir se um APK é confiável. **Use o SHA-256.**
+## About MD5 and SHA-1
 
-## Compilar
+They are shown because older tools still print them, and sometimes that is all
+the other side gives you. Both have had practical collisions for years and must
+not be used to decide whether an APK is trustworthy. **Use SHA-256.**
 
-Precisa do Android SDK e de um JDK 17 ou mais novo. O `local.properties` aponta
-para o SDK desta máquina e não vai para o repositório.
+## Building
+
+Requires the Android SDK and JDK 17 or newer. `local.properties` points to the
+SDK on your machine and is not committed.
 
 ```bash
 ./gradlew :app:assembleDebug
 ```
 
-O APK sai em `app/build/outputs/apk/debug/app-debug.apk`. Para instalar:
+The APK ends up in `app/build/outputs/apk/debug/app-debug.apk`. To install it:
 
 ```bash
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Sem `key.properties` na raiz, a build de release sai assinada com a chave de
-depuração — instalável, sem configuração nenhuma. Com o arquivo lá, sai assinada
-com a chave de release. Ver a seção "Assinatura" abaixo.
+Without a `key.properties` file at the project root, the release build is signed
+with the debug key — installable, no setup needed. With the file present, it is
+signed with the release key. See [Signing](#signing) below.
 
-Versões usadas: Gradle 9.3.1, AGP 9.1.0, Kotlin embutido do AGP
-(`android.builtInKotlin=true`, sem aplicar o plugin Kotlin), `compileSdk` 36,
-`minSdk` 24.
+Toolchain: Gradle 9.3.1, AGP 9.1.0, AGP's built-in Kotlin
+(`android.builtInKotlin=true`, without applying the Kotlin plugin),
+`compileSdk` 36, `minSdk` 24.
 
-## Permissão QUERY_ALL_PACKAGES
+## The QUERY_ALL_PACKAGES permission
 
-Do Android 11 em diante, um app só enxerga os outros se declarar
-`QUERY_ALL_PACKAGES`. Sem ela a lista viria praticamente vazia, então ela é o
-app inteiro, não um detalhe.
+Since Android 11, an app can only see other apps if it declares
+`QUERY_ALL_PACKAGES`. Without it the list would be nearly empty, so this
+permission is the whole app, not a detail.
 
-A Play Store trata essa permissão como restrita e exige justificativa para
-publicar. Para uso próprio ou distribuição por fora, nada muda.
+Google Play treats it as a restricted permission and requires a justification to
+publish. For personal use or distribution outside Play, nothing changes.
 
-## Conferido contra
+## Verified against
 
-Os valores foram comparados com os do `apksigner` e do `sha256sum` nos dois
-casos, e batem:
+The values were compared with `apksigner` and `sha256sum` for both kinds of
+hash, and they match:
 
 ```
 apksigner verify --print-certs app-debug.apk
 sha256sum app-debug.apk
 ```
 
-Testado em Android 16 (SDK 36) e Android 9 (SDK 28).
+Tested on Android 16 (SDK 36) and Android 9 (SDK 28).
 
-## Limite conhecido
+## Known limitation
 
-Ler o `base.apk` de **outro** app depende da versão do Android. Quando o sistema
-não deixa, a seção do arquivo mostra o erro e os hashes do certificado continuam
-aparecendo normalmente — eles vêm do PackageManager, não do arquivo.
+Reading **another** app's `base.apk` depends on the Android version. When the
+system doesn't allow it, the file section shows the error and the certificate
+hashes still appear normally — they come from the PackageManager, not from the
+file.
 
-## Problema conhecido no Windows (desta máquina)
+## Known issue on Windows
 
-Nesta máquina, **qualquer** programa Java falha ao fechar um arquivo `.zip`/
-`.jar` que esteja dentro de `AppData\Local` — e é justamente onde o Android SDK
-está instalado. O erro é sempre o mesmo:
+On the author's machine, **any** Java program fails to close a `.zip`/`.jar`
+file located under `AppData\Local` — which is exactly where the Android SDK is
+installed by default. The error is always the same:
 
 ```
 java.nio.file.FileSystemException: ...jar: The process cannot access the file
 because it is being used by another process
 ```
 
-Não é problema do projeto. Reproduz em Java puro, sem Gradle, e depende só de
-**onde** o arquivo está: o mesmo `.jar`, byte a byte, abre e fecha sem erro fora
-de `AppData\Local`.
+It is not a project problem. It reproduces in plain Java, without Gradle, and
+depends only on **where** the file is: the very same `.jar`, byte for byte,
+opens and closes fine outside `AppData\Local`.
 
 ```java
-// java ZipTest.java <caminho-do-jar>
+// java ZipTest.java <path-to-jar>
 FileSystem fs = FileSystems.newFileSystem(Paths.get(args[0]));
-fs.close();   // falha se o jar estiver em AppData\Local
+fs.close();   // fails if the jar is under AppData\Local
 ```
 
-| Local do mesmo jar | Fechar |
+| Location of the same jar | Close |
 |---|---|
 | `C:\Users\<user>\` | ok |
 | `C:\Users\<user>\AppData\Roaming\` | ok |
 | `C:\ziptest\` | ok |
-| `C:\Users\<user>\AppData\Local\` | **falha** |
+| `C:\Users\<user>\AppData\Local\` | **fails** |
 
-O `apksigner` do SDK também para de funcionar por isso: a JVM não consegue nem
-carregar as classes do `apksigner.jar` de lá. Copiado para fora, roda normal.
+The SDK's `apksigner` breaks for the same reason: the JVM can't even load the
+classes in `apksigner.jar` from there. Copied elsewhere, it runs fine.
 
-**O que o projeto faz a respeito:** `app/build.gradle.kts` manda o Gradle
-compilar o Java chamando o `javac` como processo separado, em vez do compilador
-embutido. O compilador embutido abre os jars do SDK como sistema de arquivos zip
-e falha ao fechá-los; o `javac` de fora não passa por esse caminho. Com isso o
-build passa, debug e release.
+**What the project does about it:** `app/build.gradle.kts` tells Gradle to
+compile Java by running `javac` as a separate process instead of the in-process
+compiler. The in-process compiler opens the SDK jars as zip file systems and
+fails to close them; an external `javac` doesn't go down that path. With that,
+both debug and release builds pass.
 
-**Como resolver de verdade** (fora do escopo do projeto), em ordem de preferência:
+On machines without the problem the workaround is harmless. Its only cost is
+losing incremental Java compilation, and the only Java in the project is the
+handful of classes ViewBinding generates.
 
-1. Descobrir e desativar o que monitora `AppData\Local`. Há um Google Drive para
-   Desktop rodando nesta máquina; vale testar com ele fechado. Listar os drivers
-   de filtro (`fltmc filters`) exige prompt de administrador.
-2. Excluir a pasta do SDK do antivírus.
-3. Reinstalar o Android SDK fora de `AppData\Local`, por exemplo em
-   `C:\Android\Sdk`, e apontar o `sdk.dir` do `local.properties` para lá.
+**How to actually fix it** (outside the project's scope), in order of
+preference:
 
-Resolvido isso, o bloco `tasks.withType<JavaCompile>` pode ser removido.
+1. Find and disable whatever is monitoring `AppData\Local`. Google Drive for
+   Desktop was running on the affected machine, so it is worth testing with it
+   closed. Listing filesystem filter drivers (`fltmc filters`) requires an
+   administrator prompt.
+2. Exclude the SDK folder from your antivirus.
+3. Reinstall the Android SDK outside `AppData\Local`, e.g. in `C:\Android\Sdk`,
+   and point `sdk.dir` in `local.properties` there.
 
-## Ícone
+Once that's fixed, the `tasks.withType<JavaCompile>` block can be removed.
 
-A arte original está em `arte/Sikey_icone.png` (1024×1024, fundo transparente),
-com o fonte do GIMP ao lado. Os PNG do lançador não são editados à mão: saem
-dela por `arte/MakeIcons.java`.
+## Icon
+
+The original artwork is in `arte/Sikey_icone.png` (1024×1024, transparent
+background), with the GIMP source next to it. Launcher PNGs are not edited by
+hand: they are generated from it by `arte/MakeIcons.java`.
 
 ```bash
 java arte/MakeIcons.java arte/Sikey_icone.png app/src/main/res
 ```
 
-O programa recorta a moldura transparente e gera, para cada densidade, duas
-coisas com regras diferentes:
+The program trims the transparent frame and generates, for each density, two
+things with different rules:
 
-- `ic_launcher.png` — ícone legado (Android 7 e anteriores), com a arte ocupando
-  92% do quadrado.
-- `ic_launcher_foreground.png` — primeiro plano do ícone adaptativo, com a arte
-  dentro da zona segura de 66dp do canvas de 108dp. Fora dela, a máscara do
-  lançador corta: num aparelho a máscara é círculo, no outro é quadrado
-  arredondado, e o desenho não pode depender de qual.
+- `ic_launcher.png` — legacy icon (Android 7 and earlier), with the artwork
+  filling 92% of the square.
+- `ic_launcher_foreground.png` — adaptive icon foreground, with the artwork
+  inside the 66dp safe zone of the 108dp canvas. Outside it, the launcher mask
+  crops: one device masks to a circle, another to a rounded square, and the
+  drawing can't depend on which.
 
-A redução é feita pela metade de cada vez até chegar perto do tamanho final.
-Ir de 1024 para 48 num passo só borra os traços finos do escudo.
+Downscaling halves the image repeatedly until it is close to the target size.
+Going from 1024 to 48 in a single step blurs the shield's thin lines.
 
-O ícone adaptativo não declara camada `monochrome`: o ícone temático do Android
-13 usa só o canal alfa, e como o miolo do escudo é opaco a silhueta viraria um
-borrão sólido. Sem a camada, o sistema usa o ícone normal.
+The adaptive icon doesn't declare a `monochrome` layer: Android 13 themed icons
+use only the alpha channel, and since the inside of the shield is opaque the
+silhouette would become a solid blob. Without the layer, the system uses the
+regular icon.
 
-## Assinatura
+## Signing
 
-A chave de release do SiKey é uma RSA de 2048 bits, válida até 29/01/2054, com
-este certificado:
+SiKey's release key is a 2048-bit RSA key, valid until 2054-01-29, with this
+certificate:
 
 ```
 CN=Caio Cunha, OU=SiKey, O=SiKey, L=Aparecida de Goiania, ST=Goias, C=BR
@@ -183,33 +192,33 @@ SHA-256: 6F:FA:31:61:6B:EC:74:8C:8F:86:D4:7A:DF:1D:FE:0F:
          F7:C6:6A:09:CA:62:5D:79:C9:63:60:72:4F:07:43:7D
 ```
 
-Essa impressão digital é **pública**: ela vai dentro de todo APK assinado por
-essa chave, e é justamente o número que o próprio SiKey mostra. Serve para
-qualquer pessoa conferir se um APK do SiKey veio mesmo daqui.
+This fingerprint is **public**: it is embedded in every APK signed with this
+key, and it is exactly the number SiKey itself shows. Anyone can use it to check
+that a SiKey APK really came from here.
 
-Nem a chave nem as senhas estão no repositório:
+Neither the key nor its passwords are in the repository:
 
-| O quê | Onde | No git? |
+| What | Where | In git? |
 |---|---|---|
-| Chave privada (`sikey-release.jks`) | fora do repositório, em `chaves-android/` | nunca |
-| Senhas e caminho (`key.properties`) | raiz do projeto | no `.gitignore` |
+| Private key (`sikey-release.jks`) | outside the repository, in the author's `~/chaves-android/` | never |
+| Passwords and path (`key.properties`) | project root | in `.gitignore` |
 
-A chave ficou **fora** da pasta do projeto de propósito. O repositório é
-público, e um `.jks` dentro dele depende de o `.gitignore` estar certo para
-sempre; fora dele, nem um `git add -f` distraído alcança.
+The key lives **outside** the project folder on purpose. The repository is
+public, and a `.jks` inside it would rely on `.gitignore` being right forever;
+outside it, not even a careless `git add -f` can reach it.
 
-### Faça backup dos dois arquivos
+### Back up both files
 
-Perder o `.jks` ou a senha significa **nunca mais** conseguir publicar uma
-atualização do SiKey. Não existe recuperação: a chave privada não está em lugar
-nenhum além desse arquivo. Guarde uma cópia dos dois em outro lugar, hoje.
+Losing the `.jks` or its password means **never** being able to publish another
+SiKey update. There is no recovery: the private key exists nowhere but in that
+file. Keep a copy of both somewhere else.
 
-E trocar de chave depois não resolve: o Android identifica o app pelo par
-`applicationId` + certificado. Um APK assinado com chave diferente é **recusado**
-na atualização, e quem já tinha o app precisa desinstalar antes de instalar o
-novo.
+Switching keys later doesn't help either: Android identifies an app by the
+`applicationId` + certificate pair. An APK signed with a different key is
+**rejected** as an update, and anyone who already had the app has to uninstall
+it before installing the new one.
 
-### Refazer (só antes de distribuir)
+### Regenerating (only before distributing)
 
 ```bash
 keytool -genkeypair -v \
@@ -218,13 +227,24 @@ keytool -genkeypair -v \
   -dname "CN=..., OU=SiKey, O=SiKey, L=..., ST=..., C=BR"
 ```
 
-Depois é só apontar `key.properties` para o arquivo novo. O `app/build.gradle.kts`
-lê as quatro propriedades (`storeFile`, `storePassword`, `keyAlias`,
-`keyPassword`) e só monta a configuração de assinatura se as quatro existirem e
-o `.jks` estiver no lugar — meia configuração falharia tarde, na hora de
-empacotar, com uma mensagem que não diz o que falta.
+Then create `key.properties` at the project root pointing at it:
 
-O APK sai com os esquemas v2 e v3. O v1 está desligado porque só serve para
-Android 6 ou anterior, e o `minSdk` aqui é 24. O v3 grava a linhagem que permite
-trocar de chave um dia sem quebrar a atualização — sem ele, essa porta fica
-fechada para sempre.
+```properties
+storeFile=C:/path/to/sikey-release.jks
+storePassword=...
+keyAlias=sikey
+keyPassword=...
+```
+
+`app/build.gradle.kts` reads those four properties and only sets up the signing
+config if all four exist and the `.jks` is in place — a half configuration would
+fail late, at packaging time, with a message that doesn't say what's missing.
+
+The APK is signed with schemes v2 and v3. v1 is disabled because it only matters
+for Android 6 and earlier, and `minSdk` here is 24. v3 records the lineage that
+makes it possible to rotate the key one day without breaking updates — without
+it, that door stays closed forever.
+
+## License
+
+[MIT](LICENSE) © 2026 Caio Cunha

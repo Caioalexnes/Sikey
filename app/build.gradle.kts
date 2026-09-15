@@ -113,7 +113,7 @@ kotlin {
 //
 // O problema e da maquina, nao do projeto: o mesmo jar copiado para fora de
 // AppData/Local abre e fecha sem erro. Reproduz em 15 linhas de Java puro, sem
-// Gradle nenhum. Ver "Problema conhecido no Windows" no README.
+// Gradle nenhum. Ver "Known issue on Windows" no README.
 //
 // Chamando o `javac` de fora, nada disso acontece: o processo termina e o
 // sistema operacional libera os arquivos. O custo e perder a compilacao
